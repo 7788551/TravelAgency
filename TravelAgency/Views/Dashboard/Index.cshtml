@@ -1,0 +1,71 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container mt-4">
+
+    <h2>Welcome, @ViewBag.FullName!</h2>
+
+    <p>
+        Your role:
+        <strong>@ViewBag.Role</strong>
+    </p>
+
+    <div class="row mt-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5>Destinations</h5>
+                    <a href="/Destination/Index"
+                       class="btn btn-primary">
+                        View Destinations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5>Packages</h5>
+                    <a href="/Package/Index"
+                       class="btn btn-primary">
+                        View Packages
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if (ViewBag.Role == "Customer")
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5>My Enquiries</h5>
+                        <a href="/Customer/Index"
+                           class="btn btn-primary">
+                            View Enquiries
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (ViewBag.Role == "Admin")
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5>Staff Management</h5>
+                        <a href="/Staff/Index"
+                           class="btn btn-primary">
+                            Manage Staff
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

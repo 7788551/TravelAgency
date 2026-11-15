@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "Login";
+    Layout = "_Layout";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-header text-center">
+                <h3>Login</h3>
+            </div>
+
+            <div class="card-body">
+                <form id="loginForm">
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email"
+                               id="email"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password"
+                               id="password"
+                               class="form-control"
+                               required />
+                    </div>
+
+                    <div id="message" class="mb-3"></div>
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Login
+                    </button>
+
+                </form>
+
+                <p class="text-center mt-3">
+                    Don't have an account?
+                    <a href="/Account/Register">Register</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            $("#loginForm").submit(function (e) {
+                e.preventDefault();
+
+                const loginData = {
+                    email: $("#email").val().trim(),
+                    password: $("#password").val()
+                };
+
+                $.ajax({
+                    url: "/api/account/login",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(loginData),
+
+                    success: function (response) {
+                        $("#message").html(
+                            '<div class="alert alert-success">' +
+                            'Login successful.' +
+                            '</div>'
+                        );
+
+                        window.location.href = "/Dashboard/Index";
+                    },
+
+                    error: function (xhr) {
+                        const message =
+                            xhr.responseJSON?.message ||
+                            "Unable to login. Please try again.";
+
+                        $("#message").html(
+                            '<div class="alert alert-danger">' +
+                            message +
+                            '</div>'
+                        );
+                    }
+                });
+            });
+
+        });
+    </script>
+}

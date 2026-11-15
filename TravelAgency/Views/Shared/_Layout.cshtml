@@ -3,47 +3,162 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - TravelAgency</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/TravelAgency.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TravelAgency</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
+    <title>@ViewData["Title"] - TravelAgency</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            &copy; 2026 - TravelAgency - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+
+            <a class="navbar-brand"
+               href="/Home/Index">
+                TravelAgency
+            </a>
+
+            <button class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse"
+                 id="mainNavbar">
+
+                <ul class="navbar-nav me-auto">
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Home/Index">
+                            Home
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Destination/Index">
+                            Destinations
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Package/Index">
+                            Packages
+                        </a>
+                    </li>
+
+                    @if (Context.Session.GetInt32("UserId") != null)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Dashboard/Index">
+                                Dashboard
+                            </a>
+                        </li>
+
+                        @if (Context.Session.GetString("Role") == "Customer")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Customer/Index">
+                                    My Enquiries
+                                </a>
+                            </li>
+                        }
+
+                        @if (Context.Session.GetString("Role") == "Admin")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Staff/Index">
+                                    Staff
+                                </a>
+                            </li>
+                        }
+                    }
+
+                </ul>
+
+                <ul class="navbar-nav">
+
+                    @if (Context.Session.GetInt32("UserId") == null)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Account/Login">
+                                Login
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Account/Register">
+                                Register
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <span class="navbar-text me-3">
+                                @Context.Session.GetString("FullName")
+                            </span>
+                        </li>
+
+                        <li class="nav-item">
+                            <button type="button"
+                                    id="logoutButton"
+                                    class="btn btn-outline-light btn-sm">
+                                Logout
+                            </button>
+                        </li>
+                    }
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-4">
+        @RenderBody()
+    </main>
+
+    <footer class="border-top text-muted py-3 mt-5">
+        <div class="container">
+            &copy; 2026 TravelAgency
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+            $(document).ready(function() {
+
+                $("#logoutButton").click(function() {
+
+                    $.ajax({
+                        url: "/api/account/logout",
+                        type: "POST",
+
+                        success: function() {
+                            window.location.href = "/Home/Index";
+                        },
+
+                        error: function() {
+                            alert("Unable to logout. Please try again.");
+                        }
+                    });
+
+                });
+
+            });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
