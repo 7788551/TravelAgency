@@ -1,5 +1,363 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "My Enquiries";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Customer Enquiries</h2>
+
+    <!-- CREATE ENQUIRY -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">Submit New Enquiry</h5>
+        </div>
+
+        <div class="card-body">
+
+            <form id="enquiryForm">
+
+                <div class="mb-3">
+                    <label class="form-label">Select Package</label>
+
+                    <select id="packageId"
+                            class="form-select"
+                            required>
+
+                        <option value="">Loading packages...</option>
+
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Enquiry Message</label>
+
+                    <textarea id="message"
+                              class="form-control"
+                              rows="4"
+                              maxlength="1000"
+                              placeholder="Enter your enquiry..."
+                              required></textarea>
+                </div>
+
+                <div id="formMessage" class="mb-3"></div>
+
+                <button type="submit"
+                        id="submitButton"
+                        class="btn btn-primary">
+
+                    Submit Enquiry
+
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+
+    <!-- MY ENQUIRIES -->
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+            <h5 class="mb-0">My Enquiry History</h5>
+        </div>
+
+        <div class="card-body">
+
+            <div id="loadingMessage">
+                Loading your enquiries...
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-striped">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Enquiry ID</th>
+                            <th>Package</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="enquiryTableBody">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div id="emptyMessage"
+                 class="alert alert-info d-none">
+
+                You have not submitted any enquiries yet.
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+@section Scripts {
+
+    <script>
+
+        $(document).ready(function () {
+
+            // Load packages and enquiries when page opens
+            loadPackages();
+            loadMyEnquiries();
+
+
+            // ==================================
+            // LOAD PACKAGES
+            // ==================================
+
+            function loadPackages() {
+
+                $.ajax({
+
+                    url: "/api/packages",
+                    type: "GET",
+
+                    success: function (packages) {
+
+                        $("#packageId").empty();
+
+                        $("#packageId").append(
+                            '<option value="">Select Package</option>'
+                        );
+
+                        $.each(packages, function (index, packageItem) {
+
+                            $("#packageId").append(
+                                $("<option>", {
+                                    value: packageItem.packageId,
+                                    text: packageItem.packageName
+                                })
+                            );
+
+                        });
+
+                    },
+
+                    error: function (xhr) {
+
+                        $("#packageId").html(
+                            '<option value="">Unable to load packages</option>'
+                        );
+
+                        console.error(xhr.responseText);
+
+                    }
+
+                });
+
+            }
+
+
+            // ==================================
+            // LOAD MY ENQUIRIES
+            // ==================================
+
+            function loadMyEnquiries() {
+
+                $.ajax({
+
+                    url: "/api/customer/my-enquiries",
+                    type: "GET",
+
+                    success: function (enquiries) {
+
+                        $("#loadingMessage").hide();
+
+                        $("#enquiryTableBody").empty();
+
+                        if (!enquiries || enquiries.length === 0) {
+
+                            $("#emptyMessage").removeClass("d-none");
+
+                            return;
+                        }
+
+                        $("#emptyMessage").addClass("d-none");
+
+                        $.each(enquiries, function (index, enquiry) {
+
+                            const row = $("<tr>");
+
+                            $("<td>")
+                                .text(enquiry.enquiryId)
+                                .appendTo(row);
+
+                            $("<td>")
+                                .text("Package #" + enquiry.packageId)
+                                .appendTo(row);
+
+                            $("<td>")
+                                .text(enquiry.message)
+                                .appendTo(row);
+
+                            $("<td>")
+                                .text(enquiry.status)
+                                .appendTo(row);
+
+                            $("<td>")
+                                .text(formatDate(enquiry.createdAt))
+                                .appendTo(row);
+
+                            $("#enquiryTableBody").append(row);
+
+                        });
+
+                    },
+
+                    error: function (xhr) {
+
+                        $("#loadingMessage").hide();
+
+                        if (xhr.status === 401 || xhr.status === 403) {
+
+                            window.location.href = "/Account/Login";
+
+                            return;
+                        }
+
+                        $("#enquiryTableBody").html(
+                            '<tr><td colspan="5" class="text-danger">' +
+                            'Unable to load enquiries.' +
+                            '</td></tr>'
+                        );
+
+                    }
+
+                });
+
+            }
+
+
+            // ==================================
+            // CREATE ENQUIRY
+            // ==================================
+
+            $("#enquiryForm").submit(function (e) {
+
+                e.preventDefault();
+
+                const enquiryData = {
+
+                    packageId: parseInt($("#packageId").val()),
+
+                    message: $("#message").val().trim()
+
+                };
+
+                if (!enquiryData.packageId || !enquiryData.message) {
+
+                    showMessage(
+                        "Please select a package and enter a message.",
+                        "danger"
+                    );
+
+                    return;
+                }
+
+                $("#submitButton").prop("disabled", true);
+
+                $.ajax({
+
+                    url: "/api/customer/enquiries",
+                    type: "POST",
+
+                    contentType: "application/json",
+
+                    data: JSON.stringify(enquiryData),
+
+                    success: function (response) {
+
+                        showMessage(
+                            response.message || "Enquiry submitted successfully.",
+                            "success"
+                        );
+
+                        $("#enquiryForm")[0].reset();
+
+                        // Refresh enquiry table
+                        loadMyEnquiries();
+
+                    },
+
+                    error: function (xhr) {
+
+                        const message =
+                            xhr.responseJSON?.message ||
+                            "Unable to submit enquiry.";
+
+                        showMessage(message, "danger");
+
+                        if (xhr.status === 401 || xhr.status === 403) {
+
+                            window.location.href = "/Account/Login";
+
+                        }
+
+                    },
+
+                    complete: function () {
+
+                        $("#submitButton").prop("disabled", false);
+
+                    }
+
+                });
+
+            });
+
+
+            // ==================================
+            // DISPLAY MESSAGE
+            // ==================================
+
+            function showMessage(message, type) {
+
+                $("#formMessage").empty();
+
+                $("<div>", {
+                    class: "alert alert-" + type,
+                    text: message
+                }).appendTo("#formMessage");
+
+            }
+
+
+            // ==================================
+            // FORMAT DATE
+            // ==================================
+
+            function formatDate(dateValue) {
+
+                if (!dateValue) {
+                    return "";
+                }
+
+                const date = new Date(dateValue);
+
+                if (isNaN(date.getTime())) {
+                    return dateValue;
+                }
+
+                return date.toLocaleString();
+
+            }
+
+        });
+
+    </script>
+
 }
